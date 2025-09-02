@@ -1,0 +1,81 @@
+{
+  "name": "spec-to-acceptance-criteria",
+  "description": "Sequential workflow from text input to acceptance criteria",
+  "version": "1.0",
+  "steps": [
+    {
+      "id": "input_validation",
+      "name": "Input Confirmation",
+      "agent": "human-validator",
+      "type": "validation",
+      "input": "{user_input}",
+      "output": "input_confirmed",
+      "dependencies": [],
+      "checkpoint": true,
+      "approval_required": true,
+      "description": "Confirm the user input before starting the workflow"
+    },
+    {
+      "id": "decompose_task",
+      "name": "Task Analysis",
+      "agent": "system-architect", 
+      "type": "analysis",
+      "input": "{user_input}",
+      "output": "task_breakdown",
+      "dependencies": ["input_validation"],
+      "condition": "input_confirmed == 'approved'"
+    },
+    {
+      "id": "generate_spec",
+      "name": "Create Functional Specification",
+      "agent": "product-spec-generator",
+      "type": "generation",
+      "input": "{task_breakdown}",
+      "output": "functional_spec",
+      "dependencies": ["decompose_task"]
+    },
+    {
+      "id": "human_validation",
+      "name": "Human Review Gateway",
+      "agent": "human-validator",
+      "type": "validation",
+      "input": "{functional_spec}",
+      "output": "approval_decision",
+      "dependencies": ["generate_spec"],
+      "checkpoint": true,
+      "approval_required": true
+    },
+    {
+      "id": "generate_criteria",
+      "name": "Create Acceptance Criteria", 
+      "agent": "acceptance-criteria-generator",
+      "type": "generation",
+      "input": "{functional_spec}",
+      "output": "acceptance_criteria",
+      "dependencies": ["human_validation"],
+      "condition": "approval_decision == 'approved'"
+    },
+    {
+      "id": "final_assembly",
+      "name": "Assemble Final Deliverables",
+      "agent": "documentation-coordinator",
+      "type": "assembly",
+      "input": "{functional_spec, acceptance_criteria}",
+      "output": "final_artifacts",
+      "dependencies": ["generate_criteria"]
+    }
+  ],
+  "execution": {
+    "strategy": "sequential",
+    "checkpoint_behavior": "pause_on_checkpoint",
+    "retry_policy": {
+      "max_retries": 2,
+      "backoff": "exponential"
+    }
+  },
+  "outputs": {
+    "functional_spec": "docs/functional-specs/",
+    "acceptance_criteria": "docs/acceptance-criteria/",
+    "final_artifacts": "docs/deliverables/"
+  }
+}
